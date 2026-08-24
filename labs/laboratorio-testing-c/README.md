@@ -74,14 +74,14 @@ Vas a ver el carrito con tres productos y su total.
 
 **P1** — Calculá a mano el total esperado: Leche ($350 x2) + Pan ($200 x3) + Queso ($1500 x1).
 
-> R: (escribí el total esperado)
+> R: 350×2 + 200×3 + 1500×1 = 700 + 600 + 1500 = **$2800**
 
 **P2** — ¿El total que imprime el programa coincide con lo que calculaste? Si no coincide, ¿cuánto muestra?
 
-> R:
+> R: No coincide. Antes de corregir el bug, `carrito_total` no multiplicaba por la cantidad de cada producto (sumaba solo el precio unitario), así que el programa imprimía 350 + 200 + 1500 = 2050 en vez de 2800.
 
 ```
-TOTAL_PROGRAMA=
+TOTAL_PROGRAMA=2050
 ```
 _(escribí el número que imprimió el programa)_
 
@@ -131,7 +131,7 @@ Mirá el código en `tests/test_unitarios.c` para entender la estructura de un t
 
 **P3** — ¿Qué hace `carrito_init` y por qué es importante llamarla antes de usar el carrito?
 
-> R:
+> R: Pone `cantidad` en 0. Es importante porque en C las variables locales (como un `Carrito c;` declarado en la pila) no se inicializan automáticamente: sin `carrito_init`, `c.cantidad` tendría un valor basura y el carrito se comportaría de forma impredecible desde el primer uso.
 
 ---
 
@@ -166,10 +166,10 @@ make test_unitarios
 
 **P4** — ¿El nuevo test pasa o falla?
 
-> R:
+> R: Pasa, incluso con el bug de `carrito_total` sin corregir. Como la cantidad es 1, sumar solo el precio (sin multiplicar por cantidad) da el mismo resultado que multiplicar por 1, así que el bug queda oculto en este caso.
 
 ```
-TEST_PRECIO_UNITARIO_PASA=
+TEST_PRECIO_UNITARIO_PASA=SI
 ```
 _(SI o NO)_
 
@@ -187,7 +187,7 @@ void test_total_con_cantidad(void) {
     carrito_init(&c);
     Producto p = {"Leche", 350, 2};  /* 350 x 2 = 700 */
     carrito_agregar(&c, p);
-    ASSERT_IGUAL(____, carrito_total(&c));  /* <-- completar el valor esperado */
+    ASSERT_IGUAL(700, carrito_total(&c));  /* <-- completar el valor esperado */
 }
 ```
 
@@ -195,10 +195,10 @@ Descomentá `/* test_total_con_cantidad(); */` en el `main()`, compilá y corré
 
 **P5** — ¿Este test pasa o falla? ¿Qué valor esperaba y qué obtuvo?
 
-> R:
+> R: Falla (con el bug sin corregir). Esperaba 700 y obtuvo 350, porque `carrito_total` solo sumaba el precio unitario sin multiplicarlo por la cantidad.
 
 ```
-TEST_TOTAL_CANTIDAD_PASA=
+TEST_TOTAL_CANTIDAD_PASA=NO
 ```
 _(SI o NO)_
 
@@ -210,11 +210,11 @@ El test anterior encontró un bug en `carrito_total`. Abrí `src/carrito.c` y bu
 
 **P6** — ¿En qué línea está el bug y qué dice ese código?
 
-> R:
+> R: En `carrito_total` (src/carrito.c), en la línea del `for`: `total += c->items[i].precio;` — suma solo el precio unitario e ignora la cantidad.
 
 **P7** — ¿Qué debería hacer esa línea para calcular el total correctamente?
 
-> R:
+> R: Debería multiplicar el precio por la cantidad: `total += c->items[i].precio * c->items[i].cantidad;`
 
 Corregí el bug. Luego volvé a compilar y correr:
 
@@ -232,7 +232,7 @@ cat salidas/test_unitarios.txt
 ```
 
 ```
-TESTS_UNITARIOS_PASAN=
+TESTS_UNITARIOS_PASAN=SI
 ```
 _(escribí SI si todos los tests pasan ahora)_
 
@@ -254,18 +254,18 @@ Descomentá `/* test_carrito_lleno(); */` en el `main()`, compilá y corré.
 
 **P8** — ¿El test pasa o falla? Si falla, ¿qué devuelve ese 5to `carrito_agregar`?
 
-> R:
+> R: Falla (con el bug sin corregir). El 5to `carrito_agregar` devuelve 1 (éxito) en vez de 0, porque la condición permitía escribir un elemento más allá del array (`MAX_ITEMS`), un buffer overflow.
 
 Si el test falló, encontraste el segundo bug. Buscá en `src/carrito.c` la condición del `if` dentro de `carrito_agregar`.
 
 **P9** — ¿Cuál es el operador incorrecto y cuál debería ser?
 
-> R:
+> R: El operador incorrecto es `<=` (`c->cantidad <= MAX_ITEMS`); debería ser `<` (`c->cantidad < MAX_ITEMS`), ya que los índices válidos del array van de 0 a `MAX_ITEMS - 1`.
 
 Corregí el bug, volvé a compilar y verificá que todos los tests pasan.
 
 ```
-BUG_2_CORREGIDO=
+BUG_2_CORREGIDO=SI
 ```
 _(SI o NO)_
 
@@ -301,7 +301,7 @@ cat salidas/test_integracion.txt
 ```
 
 ```
-TEST_INTEGRACION_PASA=
+TEST_INTEGRACION_PASA=SI
 ```
 _(SI o NO)_
 
@@ -319,7 +319,7 @@ Escribí `test_agregar_hasta_llenar()` en el lugar `/* PARTE E */`. Este test de
 Descomentá `/* test_agregar_hasta_llenar(); */` en el `main()`, compilá y corré.
 
 ```
-TEST_LLENAR_PASA=
+TEST_LLENAR_PASA=SI
 ```
 _(SI o NO)_
 
@@ -338,10 +338,10 @@ Las líneas con `#####` nunca se ejecutaron — no están cubiertas por los test
 
 **P10** — ¿Hay alguna línea de `carrito.c` con `#####`? ¿Cuál y por qué no se ejecutó?
 
-> R:
+> R: Sí, las dos líneas de `carrito_descuento` aparecen con `#####`. No se ejecutan porque `make cobertura` solo instrumenta y corre `tests/test_unitarios.c`, y `carrito_descuento` únicamente se usa en `tests/test_integracion.c` (en `test_compra_con_descuento`), que no forma parte de este target.
 
 ```
-COBERTURA_COMPLETA=
+COBERTURA_COMPLETA=NO
 ```
 _(SI si todas las líneas están cubiertas, NO si hay alguna con #####)_
 
@@ -351,27 +351,27 @@ _(SI si todas las líneas están cubiertas, NO si hay alguna con #####)_
 
 **P11** — ¿Qué diferencia hay entre un test unitario y uno de integración? ¿Cuál de los dos detectó primero el bug de `carrito_total`?
 
-> R:
+> R: Un test unitario prueba una función aislada (por ejemplo, `carrito_total` sobre un carrito armado a mano); un test de integración prueba varias funciones trabajando juntas, más cerca de un caso de uso real (agregar productos y luego calcular el total con descuento). En este laboratorio el bug de `carrito_total` lo detectó primero un test unitario (`test_total_con_cantidad`, Parte 5), antes de escribir ningún test de integración.
 
 **P12** — El bug de capacidad en `carrito_agregar` causa un **buffer overflow**: se escribe más allá del array. ¿Por qué esto es peligroso en C pero no ocurriría en un lenguaje como Python o Java?
 
-> R:
+> R: En C los arrays no llevan chequeo de límites en tiempo de ejecución: escribir en `items[MAX_ITEMS]` simplemente sobreescribe la memoria que sigue a ese array (por ejemplo, el campo `cantidad` u otras variables adyacentes en el struct o la pila), sin ningún aviso, produciendo comportamiento indefinido y una potencial vulnerabilidad explotable. Python y Java sí verifican los índices en cada acceso y lanzan una excepción (`IndexError` / `ArrayIndexOutOfBoundsException`) antes de permitir escribir fuera de los límites, evitando la corrupción de memoria.
 
 **P13** — En este laboratorio encontraste los bugs escribiendo tests. ¿Qué tiene de mejor este enfoque frente a mirar el código directamente?
 
-> R:
+> R: Un test obliga a definir de antemano, con un número concreto, cuál es el comportamiento correcto, y lo verifica automáticamente en vez de depender de que una persona lea el código con atención. Mirando el código a simple vista es fácil pasar por alto un `<=` en vez de `<`, o una multiplicación faltante, sobre todo porque ambos "se ven razonables". Además el test queda como red de seguridad: si el bug vuelve a aparecer en el futuro, se detecta al instante sin tener que releer todo el código.
 
 **P14** — El test `test_total_precio_unitario` (cantidad = 1) **pasó** a pesar del bug, mientras que `test_total_con_cantidad` (cantidad = 2) **falló**. ¿Por qué el primer test no detectó el bug?
 
-> R:
+> R: Porque con cantidad = 1, multiplicar por la cantidad o no hacerlo da el mismo resultado (`precio * 1 == precio`), así que el bug queda enmascarado. Recién con cantidad = 2 la diferencia entre `precio` (350) y `precio * cantidad` (700) se hace visible, y el test lo detecta. Esto muestra por qué conviene elegir casos de prueba que no coincidan con "casos degenerados" (como cantidad = 1).
 
 ```
-BUG_EN_FUNCION_1=
+BUG_EN_FUNCION_1=carrito_total
 ```
 _(nombre de la función con el primer bug)_
 
 ```
-BUG_EN_FUNCION_2=
+BUG_EN_FUNCION_2=carrito_agregar
 ```
 _(nombre de la función con el segundo bug)_
 
