@@ -10,14 +10,20 @@
 
 int main(void) {
 
-    /* ── ToInteger — tiene un bug, estos tests ya estan activos ─────────── */
+    /* ── ToInteger — tiene un bug, estos tests ya estan activos ───────── */
     assert(ToInteger("0") == 0);
     assert(ToInteger("1") == 1);
     assert(ToInteger("42") == 42);
     assert(ToInteger("-7") == -7);
     assert(ToInteger("100") == 100);
 
-    /* ── Operacion libre — agregar tests aca ────────────────────────────── */
+    /* ── Operacion libre — agregar tests aca ───────────────────────── */
+    assert(ToDigitChar(0) == '0');
+    assert(ToDigitChar(5) == '5');
+    assert(ToDigitChar(9) == '9');
+
+    /* ToDigitChar es la inversa de la conversion que usa ToInteger */
+    assert(ToInteger("7") == ToDigitChar(7) - '0');
 
     return 0;
 }

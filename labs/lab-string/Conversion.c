@@ -14,9 +14,13 @@ int ToInteger(const char *s) {
     if (*s == '-') { signo = -1; s++; }
     for (; *s != '\0'; s++)
         resultado = resultado * 10 + (*s - '0');
-    return signo; /* bug: falta multiplicar signo por resultado */
+    return signo * resultado;
 }
 
 /* ── Operacion libre ─────────────────────────────────────────────────────── */
 
-/* TODO */
+/* Inversa de (*s - '0'): los digitos ocupan posiciones consecutivas en la
+ * tabla de caracteres, asi que sumar d a '0' da el caracter buscado. */
+char ToDigitChar(int d) {
+    return (char)('0' + d);
+}
